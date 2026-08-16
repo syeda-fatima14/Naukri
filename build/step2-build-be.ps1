@@ -1,5 +1,4 @@
-$env:JAVA_HOME = "C:\Users\e182114\.jdks\azul-17.0.10"
-Set-Location 'F:\views\g\Naukri\backend'
+﻿Set-Location 'F:\views\g\Naukri\backend'
 Write-Host "Building backend with JAVA_HOME=$env:JAVA_HOME"
 & mvn -q clean package -DskipTests
 if ($LASTEXITCODE -ne 0) { throw "BE build failed with exit code $LASTEXITCODE" }
@@ -8,3 +7,4 @@ if (-not (Test-Path $jar)) { throw "Expected jar not found at $jar" }
 $ts = (Get-Item $jar).LastWriteTime
 $sz = [math]::Round((Get-Item $jar).Length / 1MB, 2)
 Write-Host "Step 2: BE build SUCCESS -- jar=$jar  size=${sz}MB  ts=$ts"
+

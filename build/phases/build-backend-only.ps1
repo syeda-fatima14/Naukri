@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     Backend-only "hotpatch" build for fast iteration on an already-installed
@@ -25,8 +25,6 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 Write-Host '==== build-backend-only (hotpatch) ===='
-
-$env:JAVA_HOME = 'C:\Users\e182114\.jdks\azul-17.0.10'
 # Resolve root: this script lives at <root>\build\phases\build-backend-only.ps1
 $root       = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $pomPath    = Join-Path $root 'backend\pom.xml'
@@ -58,3 +56,4 @@ Write-Host ''
 Write-Host "==== build-backend-only DONE ($sizeMb MB) ===="
 Write-Host "Drop     : $dropPath"
 Write-Host "Copy to  : %LOCALAPPDATA%\Programs\NaukriAutomator\resources\backend\naukri-be.jar"
+

@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     Phase: build-mock - compiles and packages the mock-naukri server JAR.
@@ -8,8 +8,6 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 Write-Host '==== build-mock phase ===='
-
-$env:JAVA_HOME = 'C:\Users\e182114\.jdks\azul-17.0.10'
 # Resolve root: this script lives at <root>\build\phases\build-mock.ps1
 $root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $pomPath = Join-Path $root 'mock-naukri\pom.xml'
@@ -24,3 +22,4 @@ $mvnArgs = @('-f', $pomPath, 'clean', 'package', '-DskipTests', '-Dmaven.test.sk
 if ($LASTEXITCODE -ne 0) { throw "build-mock: mvn exited with code $LASTEXITCODE" }
 
 Write-Host '==== build-mock DONE ===='
+

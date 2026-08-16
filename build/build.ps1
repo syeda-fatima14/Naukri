@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     Orchestrator - runs all six build phases in order.
@@ -14,6 +14,10 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+
+# Initialize for StrictMode before first phase
+$LASTEXITCODE = 0
+$global:LASTEXITCODE = 0
 
 Write-Host "==== NaukriAutomator Build (Variant=$Variant) ===="
 
@@ -52,3 +56,4 @@ Invoke-Phase -Name 'build-electron' -Script (Join-Path $phasesDir 'build-electro
 
 Write-Host ''
 Write-Host "==== NaukriAutomator Build COMPLETE (Variant=$Variant) ===="
+
