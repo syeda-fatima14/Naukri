@@ -35,3 +35,15 @@ runs/
 
 # Claude Code local state
 .claude/
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# Terraform crash logs
+crash.log
+crash.*.log
+
+# Ansible
+*.retry

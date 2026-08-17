@@ -15,12 +15,19 @@ pipeline {
         stage('Verify Tools') {
             steps {
                 bat '''
-                    echo ===== VERIFYING TOOLS =====
+                    echo ========================================
+                    echo VERIFYING TOOLS
+                    echo ========================================
+
                     git --version
                     java -version
                     mvn -version
                     node -v
                     npm -v
+                    terraform --version
+                    wsl --status
+
+                    echo Tools verification completed.
                 '''
             }
         }
@@ -28,10 +35,19 @@ pipeline {
         stage('Build') {
             steps {
                 bat '''
-                    echo ===== STARTING NAUKRI BUILD =====
+                    echo ========================================
+                    echo STARTING NAUKRI BUILD
+                    echo ========================================
 
                     powershell.exe -NoProfile -ExecutionPolicy Bypass ^
                     -File "%WORKSPACE%\\build\\build.ps1" -Variant Ship
+
+                    if errorlevel 1 (
+                        echo ERROR: Naukri build failed
+                        exit /b 1
+                    )
+
+                    echo Build completed successfully.
                 '''
             }
         }
@@ -39,7 +55,9 @@ pipeline {
         stage('Verify Artifact') {
             steps {
                 bat '''
-                    echo ===== CHECKING BUILD OUTPUT =====
+                    echo ========================================
+                    echo CHECKING BUILD OUTPUT
+                    echo ========================================
 
                     dir "%WORKSPACE%\\dist"
 
@@ -60,18 +78,18 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage('Prepare Deployment') {
             steps {
                 bat '''
                     echo ========================================
-                    echo STARTING DEPLOYMENT
+                    echo PREPARING DEPLOYMENT
                     echo ========================================
 
                     if not exist "%DEPLOY_DIR%" (
                         mkdir "%DEPLOY_DIR%"
                     )
 
-                    echo Copying installer...
+                    echo Copying installer to deployment directory...
 
                     copy /Y "%WORKSPACE%\\dist\\%INSTALLER%" "%DEPLOY_DIR%\\%INSTALLER%"
 
@@ -81,17 +99,79 @@ pipeline {
                     )
 
                     echo Installer copied successfully.
+                '''
+            }
+        }
 
-                    echo Installing application...
+        stage('Terraform') {
+            steps {
+                bat '''
+                    echo ========================================
+                    echo TERRAFORM
+                    echo ========================================
 
-                    "%DEPLOY_DIR%\\%INSTALLER%" /S
+                    cd /d "%WORKSPACE%\\terraform"
+
+                    echo.
+                    echo ===== TERRAFORM INIT =====
+                    terraform init
 
                     if errorlevel 1 (
-                        echo ERROR: Installation failed
+                        echo ERROR: Terraform init failed
                         exit /b 1
                     )
 
-                    echo Installation completed successfully.
+                    echo.
+                    echo ===== TERRAFORM VALIDATE =====
+                    terraform validate
+
+                    if errorlevel 1 (
+                        echo ERROR: Terraform validation failed
+                        exit /b 1
+                    )
+
+                    echo.
+                    echo ===== TERRAFORM PLAN =====
+                    terraform plan
+
+                    if errorlevel 1 (
+                        echo ERROR: Terraform plan failed
+                        exit /b 1
+                    )
+
+                    echo.
+                    echo ===== TERRAFORM APPLY =====
+                    terraform apply -auto-approve
+
+                    if errorlevel 1 (
+                        echo ERROR: Terraform apply failed
+                        exit /b 1
+                    )
+
+                    echo.
+                    echo Terraform completed successfully.
+                '''
+            }
+        }
+
+        stage('Ansible Deployment') {
+            steps {
+                bat '''
+                    echo ========================================
+                    echo ANSIBLE DEPLOYMENT
+                    echo ========================================
+
+                    echo Running Ansible through WSL...
+
+                    wsl bash -lc "cd ~/naukri-ansible && ansible-playbook deploy.yml"
+
+                    if errorlevel 1 (
+                        echo ERROR: Ansible deployment failed
+                        exit /b 1
+                    )
+
+                    echo.
+                    echo Ansible deployment completed successfully.
                 '''
             }
         }
@@ -108,6 +188,17 @@ pipeline {
                         exit /b 1
                     )
 
+                    echo Installer successfully transferred.
+
+                    echo.
+                    echo Verifying installed application...
+
+                    if not exist "C:\\Windows\\SysWOW64\\config\\systemprofile\\AppData\\Local\\Programs\\NaukriAutomator\\NaukriAutomator.exe" (
+                        echo ERROR: Naukri application was not found after deployment
+                        exit /b 1
+                    )
+
+                    echo Naukri application found successfully.
                     echo Deployment verified successfully.
                 '''
             }
@@ -119,7 +210,7 @@ pipeline {
         success {
             echo '========================================'
             echo ' NAUKRI CI/CD SUCCESSFUL'
-            echo ' BUILD + DEPLOYMENT COMPLETED'
+            echo ' BUILD + TERRAFORM + ANSIBLE + DEPLOYMENT COMPLETED'
             echo '========================================'
         }
 
