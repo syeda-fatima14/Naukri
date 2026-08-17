@@ -104,56 +104,60 @@ pipeline {
         }
 
         stage('Terraform') {
-            steps {
-                bat '''
-                    echo ========================================
-                    echo TERRAFORM
-                    echo ========================================
+    steps {
+        withCredentials([
+            usernamePassword(
+                credentialsId: 'azure-sp',
+                usernameVariable: 'ARM_CLIENT_ID',
+                passwordVariable: 'ARM_CLIENT_SECRET'
+            )
+        ]) {
+            bat '''
+                echo ========================================
+                echo TERRAFORM
+                echo ========================================
 
-                    cd /d "%WORKSPACE%\\terraform"
+                set ARM_TENANT_ID=4ccef82a-6b33-47c2-8540-09d999da9130
+                set ARM_SUBSCRIPTION_ID=d1c5d987-0777-4d6f-9eba-e11f1f4012f5
 
-                    echo.
-                    echo ===== TERRAFORM INIT =====
-                    terraform init
+                cd /d "%WORKSPACE%\\terraform"
 
-                    if errorlevel 1 (
-                        echo ERROR: Terraform init failed
-                        exit /b 1
-                    )
+                echo ===== TERRAFORM INIT =====
+                terraform init
 
-                    echo.
-                    echo ===== TERRAFORM VALIDATE =====
-                    terraform validate
+                if errorlevel 1 (
+                    echo ERROR: Terraform init failed
+                    exit /b 1
+                )
 
-                    if errorlevel 1 (
-                        echo ERROR: Terraform validation failed
-                        exit /b 1
-                    )
+                echo ===== TERRAFORM VALIDATE =====
+                terraform validate
 
-                    echo.
-                    echo ===== TERRAFORM PLAN =====
-                    terraform plan
+                if errorlevel 1 (
+                    echo ERROR: Terraform validation failed
+                    exit /b 1
+                )
 
-                    if errorlevel 1 (
-                        echo ERROR: Terraform plan failed
-                        exit /b 1
-                    )
+                echo ===== TERRAFORM PLAN =====
+                terraform plan
 
-                    echo.
-                    echo ===== TERRAFORM APPLY =====
-                    terraform apply -auto-approve
+                if errorlevel 1 (
+                    echo ERROR: Terraform plan failed
+                    exit /b 1
+                )
 
-                    if errorlevel 1 (
-                        echo ERROR: Terraform apply failed
-                        exit /b 1
-                    )
+                echo ===== TERRAFORM APPLY =====
+                terraform apply -auto-approve
 
-                    echo.
-                    echo Terraform completed successfully.
-                '''
-            }
+                if errorlevel 1 (
+                    echo ERROR: Terraform apply failed
+                    exit /b 1
+                )
+
+                echo Terraform completed successfully.
+            '''
         }
-
+    }
         stage('Ansible Deployment') {
             steps {
                 bat '''
