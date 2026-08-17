@@ -160,26 +160,25 @@ pipeline {
     }
 }
         stage('Ansible Deployment') {
-            steps {
-                bat '''
-                    echo ========================================
-                    echo ANSIBLE DEPLOYMENT
-                    echo ========================================
+    steps {
+        bat '''
+            echo ========================================
+            echo ANSIBLE DEPLOYMENT
+            echo ========================================
 
-                    echo Running Ansible through WSL...
+            echo Running Ansible through WSL...
 
-                    wsl bash -lc "cd ~/naukri-ansible && ansible-playbook deploy.yml"
+            wsl.exe bash -lc "cd ~/naukri-ansible && ansible-playbook deploy.yml"
 
-                    if errorlevel 1 (
-                        echo ERROR: Ansible deployment failed
-                        exit /b 1
-                    )
+            if errorlevel 1 (
+                echo ERROR: Ansible deployment failed
+                exit /b 1
+            )
 
-                    echo.
-                    echo Ansible deployment completed successfully.
-                '''
-            }
-        }
+            echo Ansible deployment completed successfully.
+        '''
+    }
+}
 
         stage('Verify Deployment') {
             steps {
