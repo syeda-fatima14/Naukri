@@ -158,6 +158,7 @@ pipeline {
             '''
         }
     }
+}
         stage('Ansible Deployment') {
             steps {
                 bat '''
